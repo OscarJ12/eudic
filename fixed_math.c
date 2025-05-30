@@ -45,12 +45,11 @@ static const int32_t inv_exp_table[81] = {
     178
 };
 
-// Approximate 1 / e^x using a lookup table for x in Q16.16
-static int32_t inv_exp_lookup(int32_t x_q16) {
-    if (x_q16 >= (10 << 16)) return 0; // e^-10 ≈ 0
+int32_t inv_exp_lookup_from_x(int32_t x_q16) {
+    // Clamp input to range [0, 10.0] in Q16.16
+    if (x_q16 >= (10 << 16)) return 0;
 
-    // Each step is 0.125 = 8192 in Q16.16 → x / 0.125 = x >> 13
-    uint32_t index = x_q16 >> 13;
+    uint32_t index = x_q16 >> 13;  // 0.125 step = 8192
     if (index >= 81) index = 80;
     return inv_exp_table[index];
 }
@@ -59,7 +58,7 @@ int32_t fixed_exp_signed(int32_t x) {
     if (x >= 0) {
         return fixed_exp(x);
     } else {
-        int32_t pos_x = -x;
-        return inv_exp_lookup(pos_x);  // e^-x ≈ 1 / e^x
+        return inv_exp_lookup_from_x(-x);  // look up 1 / e^x for positive x
     }
 }
+
