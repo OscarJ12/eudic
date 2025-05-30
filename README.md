@@ -15,6 +15,8 @@ This implementation is based on the method presented in:
 
 The paper details the algorithm’s derivation, mathematical rationale, performance metrics, and comparison with other exponential approximation methods (Taylor, LUT, etc.).
 
+NOTE: Right now (30/05/2025) this method only supports positive values of x. Giving it negatives leads to undefined behaviour. I am working on it, I'll add that capability soon.
+
 
 ##  Files
 
