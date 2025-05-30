@@ -4,6 +4,18 @@ This library provides a portable and efficient implementation of fixed-point mul
 
 ---
 
+## Reference
+
+This implementation is based on the method presented in:
+
+**O. W. Jackson**,  
+“A Fixed-Point Binary Decomposition Method for Efficient Exponential Approximation in Embedded Systems,”  
+*TechRxiv*, May 2025.  
+📄 [Read the full paper on TechRxiv](https://www.techrxiv.org/users/921611/articles/1293706-a-fixed-point-binary-decomposition-method-for-efficient-exponential-approximation-in-embedded-systems)
+
+The paper details the algorithm’s derivation, mathematical rationale, performance metrics, and comparison with other exponential approximation methods (Taylor, LUT, etc.).
+
+
 ##  Files
 
 | File            | Description                                      |
