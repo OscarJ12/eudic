@@ -1,10 +1,10 @@
-# 🔢 Fixed-Point Math Library (Q16.16)
+#  Fixed-Point Math Library (Q16.16)
 
-This library provides a portable and efficient implementation of fixed-point multiplication and exponential functions using **Q16.16** fixed-point format. It includes both a **portable C version** and an **optimized ARM Cortex-M3 assembly implementation**.
+This library provides a portable and efficient implementation of fixed-point multiplication and exponential functions using **Q16.16** fixed-point format. It includes both a **portable C version** and an **optimised ARM Cortex-M3 assembly implementation**.
 
 ---
 
-## 📖 Reference
+##  Reference
 
 This implementation of **positive-only** `e^x` is based on the method presented in:
 
@@ -19,13 +19,13 @@ This implementation of **positive-only** `e^x` is based on the method presented 
 
 ---
 
-## 📁 Files
+##  Files
 
 | File             | Description                                                                  |
 |------------------|------------------------------------------------------------------------------|
 | `fixed_math.c`   | Portable C implementation of `fixed_mul()`, `fixed_exp()` and `fixed_exp_signed()` |
 | `fixed_math.h`   | Public header declaring the fixed-point API                                  |
-| `fixed_point.s`  | Optimized ARMv7-M (Cortex-M3) assembly version                               |
+| `fixed_point.s`  | Optimised ARMv7-M (Cortex-M3) assembly version                               |
 
 ---
 
