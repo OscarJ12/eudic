@@ -43,7 +43,7 @@ Use `Q16_ONE = (1 << 16)` for convenience.
 
 ---
 
-## 🧰 Functions
+##  Functions
 
 ### `int32_t fixed_mul(int32_t a, int32_t b);`  
 Multiply two Q16.16 numbers with correct rounding.
@@ -57,7 +57,7 @@ Negative inputs are handled via a small lookup table plus one-point linear inter
 
 ---
 
-## 🚀 Usage Example
+##  Usage Example
 
 ```c
 #include <stdio.h>
