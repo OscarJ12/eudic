@@ -11,21 +11,22 @@ extern "C" {
  * Multiply two Q16.16 fixed-point numbers
  * @param a First operand
  * @param b Second operand
- * @return Result in Q16.16
+ * @return Result (Q16.16)
  */
 int32_t fixed_mul(int32_t a, int32_t b);
 
 /**
  * Approximate e^x for x >= 0 in Q16.16 format
- * @param x Input in Q16.16
- * @return Approximation of e^x in Q16.16
+ * @param x Input (Q16.16)
+ * @return Approximation of e^x (Q16.16)
  */
 int32_t fixed_exp(int32_t x);
 
 /**
  * Approximate e^x for any x in Q16.16 format
- * @param x Input in Q16.16 (can be negative)
- * @return Approximation of e^x in Q16.16
+ * Supports negative x via small LUT + linear interpolation
+ * @param x Input (Q16.16), can be negative
+ * @return Approximation of e^x (Q16.16)
  */
 int32_t fixed_exp_signed(int32_t x);
 
