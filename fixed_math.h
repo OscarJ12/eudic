@@ -17,10 +17,19 @@ int32_t fixed_mul(int32_t a, int32_t b);
 
 /**
  * Approximate exp(x) in Q16.16 format
+ * Supports only non-negative x.
  * @param x Input in Q16.16
  * @return Approximation of e^x in Q16.16
  */
 int32_t fixed_exp(int32_t x);
+
+/**
+ * Approximate exp(x) in Q16.16 format
+ * Supports negative and positive x.
+ * @param x Input in Q16.16
+ * @return Approximation of e^x in Q16.16
+ */
+int32_t fixed_exp_signed(int32_t x);
 
 /** Constant for Q16.16 representation of 1.0 */
 #define Q16_ONE (1 << 16)
