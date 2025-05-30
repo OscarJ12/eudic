@@ -22,7 +22,7 @@ The paper details the algorithm’s derivation, mathematical rationale, performa
 |-----------------|--------------------------------------------------|
 | `fixed_math.c`  | Portable C implementation of `fixed_mul()` and `fixed_exp()` |
 | `fixed_math.h`  | Public header declaring the fixed-point API      |
-| `fixed_point.s` | Optimized ARMv7-M (Cortex-M3) assembly version   |
+| `fixed_point.s` | Optimised ARMv7-M (Cortex-M3) assembly version   |
 
 ---
 
@@ -47,7 +47,7 @@ Multiplies two Q16.16 numbers with rounding.
 
 ### `int32_t fixed_exp(int32_t x);`
 
-Approximates the exponential function `exp(x)` using integer math.
+Approximates the exponential function `exp(x)` using integer maths.
 
 ---
 
