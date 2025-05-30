@@ -1,10 +1,10 @@
-# 🔢 Fixed-Point Math Library (Q16.16)
+#  Fixed-Point Math Library (Q16.16)
 
 This library provides a portable and efficient implementation of fixed-point multiplication and exponential functions using **Q16.16** fixed-point format. It includes both a **portable C version** and an **optimized ARM Cortex-M3 assembly implementation**.
 
 ---
 
-## 📁 Files
+##  Files
 
 | File            | Description                                      |
 |-----------------|--------------------------------------------------|
@@ -14,7 +14,7 @@ This library provides a portable and efficient implementation of fixed-point mul
 
 ---
 
-## 🧠 About Q16.16 Format
+##  About Q16.16 Format
 
 The Q16.16 format stores fixed-point numbers in a 32-bit integer:
 - The **upper 16 bits** represent the integer part
@@ -27,7 +27,7 @@ For example:
 
 ---
 
-## 🚀 Functions
+##  Functions
 
 ### `int32_t fixed_mul(int32_t a, int32_t b);`
 
@@ -39,7 +39,7 @@ Approximates the exponential function `exp(x)` using integer math.
 
 ---
 
-## 📦 Usage Example
+##  Usage Example
 
 ```c
 #include <stdio.h>
