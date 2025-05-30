@@ -7,7 +7,7 @@ int32_t fixed_mul(int32_t a, int32_t b) {
     return (int32_t)(temp >> 16);
 }
 
-// Table for fractional bits of e^x (x in Q16.16)
+// Precomputed constants for fractional bits of e^x (Q16.16)
 static const int32_t exp_table[12] = {
     0, 108853, 84102, 74264, 69783, 67585,
     66573, 66075, 65824, 65700, 65637, 65606
@@ -35,7 +35,7 @@ int32_t fixed_exp(int32_t x) {
     return result;
 }
 
-// Precomputed 1/e^x for x = 0..10 in steps of 0.125 (81 entries)
+// Precomputed 1/e^x for x = 0..10 in steps of 0.125 (81 entries) in Q16.16
 static const int32_t inv_exp_table[81] = {
     65536, 57436, 50399, 44231, 38836, 34061, 29842, 26119, 22837, 19951,
     17416, 15191, 13245, 11547, 10069,  8788,  7676,  6712,  5877,  5158,
@@ -49,34 +49,38 @@ static const int32_t inv_exp_table[81] = {
 };
 
 /**
- * Lookup 1/e^x for x in Q16.16, handling the sign and clamping.
- * If x_q16 <= 0, returns 1.0 (Q16_ONE).
- * If x_q16 >= 10.0, returns 0.
+ * Lookup 1/e^x with one-point linear interpolation.
+ * x_q16: positive Q16.16 value (0..10.0)
  */
-static int32_t inv_exp_lookup_from_x(int32_t x_q16) {
+static int32_t inv_exp_interp(int32_t x_q16) {
     if (x_q16 <= 0) {
-        // e^0 = 1  =>  e^-0 = 1
         return Q16_ONE;
     }
-    // If beyond table range, underflows to zero
     if (x_q16 >= (10 << 16)) {
         return 0;
     }
-    // Convert to unsigned so >> is logical
     uint32_t ux = (uint32_t)x_q16;
-    // index = floor(x / 0.125) = x_q16 >> 13
-    uint32_t index = ux >> 13;
-    if (index >= 81) index = 80;
-    return inv_exp_table[index];
+    uint32_t idx  = ux >> 13;           // step = 0.125 = 2^(-3+16) => shift 13
+    if (idx >= 80) idx = 80;
+    int32_t y0 = inv_exp_table[idx];
+    int32_t y1 = inv_exp_table[idx + 1];
+
+    // fraction = (x % step) / step in Q16.16
+    // resid = ux & (step-1) = ux & 0x1FFF, then scale: resid/8192 = (resid<<3)/65536
+    int32_t frac = (int32_t)((ux & 0x1FFF) << 3);
+
+    // delta = (y1 - y0) * frac
+    int32_t delta = fixed_mul(y1 - y0, frac);
+    return y0 + delta;
 }
 
-// Compute e^x for any x (signed Q16.16), no division, small LUT
+// Compute e^x for any signed x in Q16.16
 int32_t fixed_exp_signed(int32_t x) {
     if (x >= 0) {
         return fixed_exp(x);
     } else {
-        // e^-x = 1 / e^x  ≈ lookup_table(-x)
-        return inv_exp_lookup_from_x(-x);
+        // Approximate e^-|x| via LUT + interp
+        return inv_exp_interp(-x);
     }
 }
 
