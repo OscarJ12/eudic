@@ -13,8 +13,11 @@ int32_t from_float(float f) {
 }
 
 int main(void) {
-    // Test input: 1.0 in float
-    float input_f = 1.0f;
+    // Test input
+    float input_f;
+    printf("e^x\n");
+    printf("Input x: ");
+    scanf("%f", &input_f);
     int32_t input_q = from_float(input_f);
 
     // Call fixed-point exponential
