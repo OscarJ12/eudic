@@ -25,8 +25,9 @@ fixed_exp:
     mov     r4, r0                // x in Q16.16
     asr     r5, r4, #16           // integer part
     uxth    r6, r4                // fractional part
-    mov     r7, #0x00010000       // result = 1.0
+    ldr     r7, =Q16_ONE          // result = 1.0
 
+    // Integer part: multiply by e^1 for each integer
 1:  cmp     r5, #0
     beq     2f
     ldr     r0, =EXP_E
@@ -36,8 +37,8 @@ fixed_exp:
     subs    r5, r5, #1
     b       1b
 
+    // Fractional part: binary decomposition
 2:  movs    r5, #1
-
 3:  cmp     r5, #11
     bgt     4f
     // mask = 1 << (16 - r5)
@@ -53,7 +54,6 @@ fixed_exp:
     mov     r7, r0
 5:  adds    r5, r5, #1
     b       3b
-
 4:  mov     r0, r7
     pop     {r4-r7, pc}
 
@@ -62,37 +62,51 @@ fixed_exp:
 .global inv_exp_interp
 .type inv_exp_interp, %function
 inv_exp_interp:
-    push    {r4-r6, lr}
+    push    {r4-r7, lr}
+    
+    // Check bounds
     cmp     r0, #0
-    ble     .L1
-    ldr     r4, =(10 << 16)
-    cmp     r0, r4
-    bge     .L2
-    uxth    r4, r0                // fractional Q16.16 lower half in ux
-    // idx = r0 >> 13
-    lsrs    r5, r0, #13
-    cmp     r5, #80
-    ble     .L3
-    movs    r5, #80
-    b       .L3
-.L3:
-    ldr     r6, =inv_exp_table
-    ldr     r1, [r6, r5, lsl #2]
-    ldr     r2, [r6, r5, lsl #2 + 4]
-    // frac = (r0 & 0x1FFF) << 3
-    movs    r0, #0x1F
-    lsl     r0, r0, #8            // r0 = 0x1F00? Better load mask directly
-    // Instead calculate mask differently
-    // For brevity: r3 = (r0_original & 0x1FFF) << 3
-    // Then delta = fixed_mul(r2 - r1, r3)
-    // return r1 + delta
-    // [Implementation of mask & interp omitted for brevity]
-.L1:
-    mov     r0, #0x00010000       // return 1.0
-    pop     {r4-r6, pc}
-.L2:
-    movs    r0, #0                // return 0
-    pop     {r4-r6, pc}
+    ble     .L_return_one
+    ldr     r1, =(10 << 16)
+    cmp     r0, r1
+    bge     .L_return_zero
+    
+    // idx = x >> 13 (step = 0.125 = 2^(-3+16) => shift 13)
+    lsrs    r4, r0, #13           // r4 = idx
+    cmp     r4, #80
+    ble     .L_idx_ok
+    movs    r4, #80
+.L_idx_ok:
+    
+    // Get y0 and y1 from table
+    ldr     r5, =inv_exp_table
+    ldr     r6, [r5, r4, lsl #2]  // r6 = y0 = inv_exp_table[idx]
+    ldr     r7, [r5, r4, lsl #2]
+    ldr     r7, [r5, #4]!         // r7 = y1 = inv_exp_table[idx + 1]
+    // Actually do this properly:
+    adds    r1, r4, #1
+    ldr     r7, [r5, r1, lsl #2]  // r7 = y1 = inv_exp_table[idx + 1]
+    
+    // frac = (x & 0x1FFF) << 3
+    ldr     r1, =0x1FFF
+    ands    r1, r0, r1            // r1 = x & 0x1FFF
+    lsls    r1, r1, #3            // r1 = frac = (x & 0x1FFF) << 3
+    
+    // delta = fixed_mul(y1 - y0, frac)
+    subs    r0, r7, r6            // r0 = y1 - y0
+    bl      fixed_mul             // r0 = delta = fixed_mul(y1 - y0, frac)
+    
+    // result = y0 + delta
+    adds    r0, r6, r0
+    pop     {r4-r7, pc}
+
+.L_return_one:
+    ldr     r0, =Q16_ONE
+    pop     {r4-r7, pc}
+
+.L_return_zero:
+    movs    r0, #0
+    pop     {r4-r7, pc}
 
 // ----------------------------------------------------------------------------
 // Compute e^x for any signed x: positive via fixed_exp, negative via inv_exp_interp
@@ -109,8 +123,16 @@ fixed_exp_signed:
 // Data tables
 .data
 .align 2
+
+Q16_ONE:
+    .word 0x00010000
+
+EXP_E:
+    .word 178145
+
 exp_table:
-    .word 0, 108853, 84102, 74264, 69783, 67585, 66573, 66075, 65824, 65700, 65637, 65606
+    .word 0, 108853, 84102, 74264, 69783, 67585
+    .word 66573, 66075, 65824, 65700, 65637, 65606
 
 inv_exp_table:
     .word 65536, 57436, 50399, 44231, 38836, 34061, 29842, 26119, 22837, 19951
@@ -122,9 +144,3 @@ inv_exp_table:
     .word 318, 307, 296, 286, 276, 267, 258, 250, 243, 236
     .word 229, 223, 217, 211, 206, 200, 195, 191, 186, 182
     .word 178
-
-// Constant
-.global EXP_E
-.type EXP_E, %object
-EXP_E:
-    .word 178145
