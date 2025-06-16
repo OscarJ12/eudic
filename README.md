@@ -6,7 +6,7 @@ This library provides a portable and efficient implementation of fixed-point mul
 
 ##  Reference
 
-This implementation of **positive-only** `e^x` is based on the method presented in:
+This implementation of `e^x` is based on the method presented in:
 
 **O. W. Jackson**,  
 “A Fixed-Point Binary Decomposition Method for Efficient Exponential Approximation in Embedded Systems,”  
@@ -15,7 +15,7 @@ This implementation of **positive-only** `e^x` is based on the method presented 
 
 > **Note:**  
 > The published paper describes only the positive-`x` algorithm.  
-> Support for negative exponents (`fixed_exp_signed`) is a library extension, not (yet) covered in a formal publication.
+> Support for negative exponents (`fixed_exp_signed`) is a library extension, not (yet) covered in a formal publication. The extension is currently under review by Elsevier for Microprocessors and Microsystems.
 
 ---
 
@@ -29,7 +29,7 @@ This implementation of **positive-only** `e^x` is based on the method presented 
 
 ---
 
-## ⚙️ About Q16.16 Format
+## About Q16.16 Format
 
 The Q16.16 format stores fixed-point numbers in a 32-bit integer:  
 - **Upper 16 bits**: integer part  
