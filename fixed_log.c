@@ -9,23 +9,61 @@
 #define LN10_Q16 150902    // ln(10) ≈ 2.302585
 #define SQRT2_Q16 92682    // sqrt(2) ≈ 1.414214
 
-// Helper: Count leading zeros (for domain reduction)
-static int clz32(uint32_t x) {
-    if (x == 0) return 32;
-    int n = 0;
-    if (x <= 0x0000FFFF) { n += 16; x <<= 16; }
-    if (x <= 0x00FFFFFF) { n += 8;  x <<= 8;  }
-    if (x <= 0x0FFFFFFF) { n += 4;  x <<= 4;  }
-    if (x <= 0x3FFFFFFF) { n += 2;  x <<= 2;  }
-    if (x <= 0x7FFFFFFF) { n += 1;  }
-    return n;
+// Optional: Define USE_NEWTON_REFINEMENT to enable the Newton-Raphson step
+// This improves accuracy but uses the division-free reciprocal approximation
+// #define USE_NEWTON_REFINEMENT
+
+// Division-free reciprocal approximation using Newton-Raphson
+// Computes 1/b in Q16.16 format without using division
+static int32_t fixed_reciprocal(int32_t b) {
+    if (b <= 0) return 0x7FFFFFFF;
+    
+    // Initial approximation using shifts
+    // For b in [0.5, 2], use linear approximation: 1/b ≈ 2 - b
+    int32_t x;
+    int shift = 0;
+    
+    // Normalize b to range [0.5, 1] by shifting
+    int32_t b_norm = b;
+    if (b_norm < (Q16_ONE >> 1)) {
+        while (b_norm < (Q16_ONE >> 1)) {
+            b_norm <<= 1;
+            shift--;
+        }
+    } else {
+        while (b_norm >= Q16_ONE) {
+            b_norm >>= 1;
+            shift++;
+        }
+    }
+    
+    // Initial guess: x = 2 - b_norm (good for b_norm in [0.5, 1])
+    x = (Q16_ONE << 1) - b_norm;
+    
+    // Newton-Raphson iterations: x_new = x * (2 - b_norm * x)
+    // This converges to 1/b_norm
+    for (int i = 0; i < 3; i++) {
+        int32_t bx = fixed_mul(b_norm, x);
+        int32_t two_minus_bx = (Q16_ONE << 1) - bx;
+        x = fixed_mul(x, two_minus_bx);
+    }
+    
+    // Adjust for the normalization shift
+    if (shift > 0) {
+        x >>= shift;
+    } else {
+        x <<= -shift;
+    }
+    
+    return x;
 }
 
-// Compute fixed_div for Newton-Raphson (optional optimization)
+// Compute fixed_div without hardware division
 static int32_t fixed_div(int32_t a, int32_t b) {
-    if (b == 0) return 0x7FFFFFFF;  // Return max value on divide by zero
-    int64_t temp = ((int64_t)a << 16) + (b >> 1);  // Add b/2 for rounding
-    return (int32_t)(temp / b);
+    if (b == 0) return 0x7FFFFFFF;
+    // a/b = a * (1/b)
+    int32_t recip = fixed_reciprocal(b);
+    return fixed_mul(a, recip);
 }
 
 /**
@@ -107,7 +145,10 @@ int32_t fixed_log(int32_t y) {
         }
     }
     
+    
+    #ifdef USE_NEWTON_REFINEMENT
     // Optional: One Newton-Raphson iteration for refinement
+    // This uses division-free reciprocal approximation
     // x_new = x_old + (m - e^x_old) / e^x_old
     int32_t exp_final = fixed_exp(x_mid);
     if (exp_final > 0 && exp_final < (Q16_ONE << 2)) {  // Avoid overflow
@@ -115,6 +156,7 @@ int32_t fixed_log(int32_t y) {
         int32_t correction = fixed_div(error, exp_final);
         x_mid += correction;
     }
+    #endif
     
     // Step 3: Reconstruct result
     // ln(y) = k * ln(2) + ln(m)
